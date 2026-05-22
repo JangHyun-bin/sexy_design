@@ -1,0 +1,970 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Design Operating Stack - Mobile Shotgun Board</title>
+    <style>
+      :root {
+        --page: #e6e7e2;
+        --ink: #09090b;
+        --muted: #6d6d70;
+        --line: rgba(9, 9, 11, 0.14);
+        --panel: rgba(255, 255, 255, 0.64);
+        --shadow: 0 24px 70px rgba(20, 20, 24, 0.16);
+        --radius: 24px;
+        color-scheme: light;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background:
+          linear-gradient(90deg, rgba(9, 9, 11, 0.04) 1px, transparent 1px),
+          linear-gradient(rgba(9, 9, 11, 0.035) 1px, transparent 1px),
+          var(--page);
+        background-size: 64px 64px;
+        color: var(--ink);
+        overflow-x: clip;
+      }
+
+      button {
+        font: inherit;
+      }
+
+      .board {
+        width: min(1680px, calc(100% - 40px));
+        margin: 0 auto;
+        padding: 28px 0 48px;
+      }
+
+      .mast {
+        min-height: 126px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+        gap: 24px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 24px;
+      }
+
+      .kicker {
+        margin: 0 0 12px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 12ch;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(48px, 8vw, 112px);
+        line-height: 0.84;
+        letter-spacing: 0;
+      }
+
+      .mast__meta {
+        width: min(360px, 100%);
+        padding-top: 8px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .controls {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding: 14px 0;
+        background: color-mix(in oklab, var(--page) 86%, transparent);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--line);
+        overflow-x: auto;
+      }
+
+      .controls {
+        scrollbar-width: none;
+      }
+
+      .controls::-webkit-scrollbar {
+        display: none;
+      }
+
+      .filter {
+        min-height: 40px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.52);
+        color: var(--ink);
+        padding: 0 15px;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+
+      .filter.is-active {
+        background: var(--ink);
+        color: white;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+        padding-top: 18px;
+      }
+
+      .variant {
+        min-width: 0;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.46);
+        box-shadow: var(--shadow);
+        padding: 16px;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: 14px;
+      }
+
+      .variant__head {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        min-width: 0;
+      }
+
+      .variant h2 {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      .variant p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .tag {
+        align-self: start;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 6px 9px;
+        color: var(--muted);
+        font-size: 11px;
+        white-space: nowrap;
+      }
+
+      .phone {
+        width: min(100%, 352px);
+        min-height: 700px;
+        margin: 0 auto;
+        border-radius: 34px;
+        overflow: hidden;
+        position: relative;
+        isolation: isolate;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+      }
+
+      .phone button {
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .phone button:focus-visible {
+        outline: 3px solid currentColor;
+        outline-offset: 3px;
+      }
+
+      .phone button:active {
+        transform: translateY(1px) scale(0.99);
+      }
+
+      .mini-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 20px 20px 0;
+      }
+
+      .mini-label {
+        margin: 0;
+        font-size: 10px;
+        line-height: 1;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .round {
+        width: 42px;
+        height: 42px;
+        border: 0;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        font-weight: 900;
+      }
+
+      .bottom-action {
+        position: absolute;
+        left: 18px;
+        right: 18px;
+        bottom: 16px;
+        min-height: 58px;
+        border-radius: 999px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        align-items: center;
+        padding: 6px;
+        gap: 4px;
+      }
+
+      .bottom-action button {
+        min-height: 46px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: inherit;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .bottom-action .active {
+        background: currentColor;
+      }
+
+      .bottom-action .active span {
+        color: var(--active-ink, white);
+      }
+
+      .a-finance {
+        color: #f8f8fb;
+        background:
+          radial-gradient(circle at 86% 12%, rgba(126, 233, 255, 0.45), transparent 150px),
+          radial-gradient(circle at 20% 38%, rgba(20, 63, 255, 0.5), transparent 170px),
+          #05050a;
+      }
+
+      .a-finance::before,
+      .f-ops::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.24) 0.8px, transparent 0.8px);
+        background-size: 9px 9px;
+        opacity: 0.24;
+        pointer-events: none;
+      }
+
+      .balance {
+        padding: 28px 20px 0;
+      }
+
+      .balance small {
+        display: block;
+        color: rgba(248, 248, 251, 0.58);
+        font-size: 13px;
+      }
+
+      .balance strong {
+        display: block;
+        margin-top: 4px;
+        font-size: 58px;
+        line-height: 0.9;
+        letter-spacing: 0;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .glass-card {
+        position: relative;
+        width: 250px;
+        height: 164px;
+        margin: 24px auto 0;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 24px;
+        background:
+          linear-gradient(180deg, rgba(126, 233, 255, 0.72), rgba(18, 52, 214, 0.72) 46%, #030306 84%),
+          #111;
+        overflow: hidden;
+      }
+
+      .glass-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.18) 1px, transparent 1px);
+        background-size: 18px 18px;
+      }
+
+      .glass-card b {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-size: 86px;
+      }
+
+      .quick {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+        padding: 22px 16px 0;
+      }
+
+      .quick button {
+        min-height: 72px;
+        border: 0;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.92);
+        color: #07070b;
+        font-size: 10px;
+        font-weight: 850;
+      }
+
+      .sheet {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 235px;
+        border-radius: 28px 28px 0 0;
+        background: #f8f8f4;
+        color: #07070b;
+        padding: 20px;
+      }
+
+      .tx {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        border-top: 1px solid rgba(7, 7, 11, 0.1);
+        padding-top: 14px;
+        margin-top: 14px;
+        font-size: 13px;
+      }
+
+      .b-alarm {
+        background: #ffe600;
+        color: #070707;
+      }
+
+      .time {
+        padding: 42px 22px 0;
+      }
+
+      .time strong {
+        display: block;
+        font-size: 82px;
+        line-height: 0.9;
+        letter-spacing: 0;
+        font-weight: 720;
+      }
+
+      .time span {
+        color: rgba(7, 7, 7, 0.46);
+      }
+
+      .ruler {
+        height: 124px;
+        margin: 30px 18px 0;
+        border-radius: 22px;
+        background:
+          linear-gradient(90deg, transparent 0 48%, #f20c22 48% 49%, transparent 49%),
+          repeating-linear-gradient(90deg, rgba(7, 7, 7, 0.22) 0 2px, transparent 2px 8px),
+          rgba(255, 255, 255, 0.16);
+      }
+
+      .day-strip {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 4px;
+        padding: 18px 18px 0;
+        color: rgba(7, 7, 7, 0.54);
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .day-strip b {
+        color: #070707;
+        background: rgba(255, 255, 255, 0.26);
+        border-radius: 999px;
+        padding: 10px 0;
+      }
+
+      .alarm-card {
+        margin: 20px 18px 0;
+        min-height: 142px;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.24);
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        padding: 18px;
+      }
+
+      .alarm-card strong {
+        font-size: 54px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .c-swiss {
+        background: #e9e9e8;
+        color: #111;
+      }
+
+      .swiss-mark {
+        padding: 18px 16px 0;
+        font-size: 66px;
+        line-height: 0.74;
+        font-weight: 900;
+        letter-spacing: 0.02em;
+      }
+
+      .spec-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        padding: 26px 18px 0;
+        font-family: "Courier New", monospace;
+        font-size: 11px;
+        line-height: 1.2;
+        text-transform: uppercase;
+      }
+
+      .object-disc {
+        width: 250px;
+        height: 250px;
+        margin: 22px auto 0;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 50% 50%, #f5f5f4 0 18%, #9a9a98 19% 21%, transparent 22%),
+          conic-gradient(from 40deg, #111, #676767, #f1f1ef, #2d2d2e, #111);
+        box-shadow: inset 0 0 0 24px #111, 0 30px 60px rgba(0, 0, 0, 0.26);
+      }
+
+      .swiss-cta {
+        margin: 26px 18px 0;
+        min-height: 54px;
+        border: 0;
+        border-radius: 8px;
+        background: #ff6a00;
+        width: calc(100% - 36px);
+        font-weight: 850;
+      }
+
+      .d-paper {
+        background:
+          linear-gradient(#d5edf5 1px, transparent 1px) 0 342px / 100% 22px no-repeat,
+          #fbfaf5;
+        color: #171412;
+      }
+
+      .paper-hero {
+        padding: 36px 24px 0;
+        text-align: center;
+      }
+
+      .paper-hero h3 {
+        margin: 18px 0 0;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 43px;
+        line-height: 0.94;
+        font-weight: 500;
+      }
+
+      .doodle {
+        width: 142px;
+        height: 112px;
+        margin: 0 auto;
+        position: relative;
+      }
+
+      .doodle::before,
+      .doodle::after {
+        content: "";
+        position: absolute;
+        border: 3px solid #171412;
+      }
+
+      .doodle::before {
+        inset: 30px 18px 16px;
+        border-radius: 50% 50% 44% 44%;
+        transform: rotate(-12deg);
+      }
+
+      .doodle::after {
+        width: 88px;
+        height: 2px;
+        left: 34px;
+        top: 32px;
+        border-width: 3px 0 0;
+        transform: rotate(-24deg);
+      }
+
+      .note-panel {
+        margin: 38px 22px 0;
+        min-height: 190px;
+        background: #5f91f6;
+        color: #102e70;
+        border: 2px solid #3d6fff;
+        display: grid;
+        grid-template-columns: 0.72fr 1fr;
+      }
+
+      .note-panel div:first-child {
+        padding: 20px;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 24px;
+      }
+
+      .note-panel div:last-child {
+        margin: 14px;
+        border-radius: 12px;
+        background: #fffdf7;
+      }
+
+      .e-care {
+        background: #fbf8f1;
+        color: #251714;
+      }
+
+      .care-head {
+        padding: 36px 22px 0;
+      }
+
+      .care-head h3 {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 41px;
+        line-height: 0.98;
+        font-weight: 500;
+      }
+
+      .care-media {
+        margin: 28px 22px 0;
+        min-height: 198px;
+        border-radius: 24px;
+        background:
+          linear-gradient(90deg, rgba(69, 39, 26, 0.72), rgba(187, 78, 55, 0.38)),
+          radial-gradient(circle at 28% 38%, rgba(255, 255, 255, 0.65), transparent 62px),
+          #9c4d3b;
+        filter: saturate(0.88);
+      }
+
+      .stat-flood {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 266px;
+        background: #b9432e;
+        color: #fff8ef;
+        padding: 24px 22px;
+      }
+
+      .stat-flood strong {
+        display: block;
+        margin-top: 22px;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 68px;
+        font-weight: 400;
+      }
+
+      .f-ops {
+        background: #050505;
+        color: #f5f5f0;
+      }
+
+      .ops-title {
+        padding: 34px 18px 0;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 40px;
+        line-height: 0.95;
+      }
+
+      .ops-chip {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        margin: 22px 18px 0;
+        border: 1px dashed rgba(255, 255, 255, 0.24);
+        padding: 8px 10px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 11px;
+        text-transform: uppercase;
+      }
+
+      .ops-chip::before {
+        content: "";
+        width: 5px;
+        height: 18px;
+        background: #ff4d10;
+      }
+
+      .ops-grid {
+        margin: 28px 16px 0;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .ops-grid div {
+        min-height: 92px;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 14px;
+      }
+
+      .ops-grid strong {
+        display: block;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 32px;
+        font-weight: 400;
+      }
+
+      .bars {
+        margin: 22px 16px 0;
+        height: 132px;
+        display: flex;
+        align-items: end;
+        gap: 7px;
+        padding: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .bars span {
+        flex: 1;
+        background: #f4f4ef;
+        min-height: 18px;
+      }
+
+      .bars span:nth-child(1) { height: 24%; }
+      .bars span:nth-child(2) { height: 32%; }
+      .bars span:nth-child(3) { height: 47%; }
+      .bars span:nth-child(4) { height: 52%; }
+      .bars span:nth-child(5) { height: 65%; }
+      .bars span:nth-child(6) { height: 72%; }
+      .bars span:nth-child(7) { height: 84%; }
+      .bars span:nth-child(8) { height: 94%; }
+
+      .notes {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 18px;
+        padding-top: 18px;
+      }
+
+      .note {
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.42);
+        padding: 12px;
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--muted);
+      }
+
+      .note b {
+        display: block;
+        color: var(--ink);
+        margin-bottom: 5px;
+      }
+
+      @media (max-width: 1180px) {
+        .grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .notes {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 760px) {
+        .board {
+          width: min(100% - 24px, 460px);
+          padding-top: 18px;
+        }
+
+        .mast {
+          grid-template-columns: 1fr;
+        }
+
+        .mast__meta {
+          width: 100%;
+          overflow-wrap: anywhere;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .notes {
+          grid-template-columns: 1fr;
+        }
+
+        .variant {
+          padding: 12px;
+        }
+
+        .phone {
+          width: 100%;
+          max-width: 320px;
+          min-height: 640px;
+        }
+
+        .balance strong {
+          font-size: 50px;
+        }
+
+        .time strong {
+          font-size: 72px;
+        }
+
+        .glass-card {
+          width: 230px;
+          height: 150px;
+        }
+
+        .object-disc {
+          width: 220px;
+          height: 220px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="board">
+      <header class="mast">
+        <div>
+          <p class="kicker">Design Operating Stack / Shotgun Board</p>
+          <h1>Mobile directions</h1>
+        </div>
+        <p class="mast__meta">
+          Six distinct screen grammars from the current reference DNA. Each option
+          keeps one dominant gesture, one accent footprint, and a mobile-native
+          state model.
+        </p>
+      </header>
+
+      <nav class="controls" aria-label="Variant filters">
+        <button class="filter is-active" data-filter="all">All</button>
+        <button class="filter" data-filter="finance">Finance</button>
+        <button class="filter" data-filter="time">Time</button>
+        <button class="filter" data-filter="object">Object</button>
+        <button class="filter" data-filter="paper">Paper</button>
+        <button class="filter" data-filter="trust">Trust</button>
+        <button class="filter" data-filter="ops">Ops</button>
+      </nav>
+
+      <section class="grid" aria-label="Design variants">
+        <article class="variant" data-kind="finance">
+          <div class="variant__head">
+            <div>
+              <h2>A. Night Wallet</h2>
+              <p>Oversized balance, selected debit card, transaction sheet.</p>
+            </div>
+            <span class="tag">Mobile Kinetic</span>
+          </div>
+          <div class="phone a-finance">
+            <div class="mini-top">
+              <p class="mini-label">Northstar account</p>
+              <button class="round" aria-label="Open menu">=</button>
+            </div>
+            <div class="balance">
+              <small>Available balance</small>
+              <strong>$24,092<span>.67</span></strong>
+            </div>
+            <div class="glass-card"><b>*</b></div>
+            <div class="quick">
+              <button>+<br>Add</button>
+              <button>-><br>Send</button>
+              <button>fx<br>Convert</button>
+              <button>...<br>More</button>
+            </div>
+            <div class="sheet">
+              <p class="mini-label">Today</p>
+              <h3>Transactions</h3>
+              <div class="tx"><span>Conversion USD to EUR</span><strong>-$2,000</strong></div>
+              <div class="tx"><span>John Williams</span><strong>+$75</strong></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="variant" data-kind="time">
+          <div class="variant__head">
+            <div>
+              <h2>B. Acid Alarm</h2>
+              <p>Time as product object with ruler control and bottom state.</p>
+            </div>
+            <span class="tag">Kinetic Time</span>
+          </div>
+          <div class="phone b-alarm">
+            <div class="mini-top">
+              <p class="mini-label">Alarm</p>
+              <button class="round" aria-label="Collapse alarm">v</button>
+            </div>
+            <div class="time">
+              <strong>09<span>:50</span></strong>
+              <p>Next alarm in <b>19 min</b></p>
+            </div>
+            <div class="ruler" aria-hidden="true"></div>
+            <div class="day-strip"><span>Mon</span><span>Tue</span><span>Wed</span><b>Thu</b><span>Fri</span><span>Sat</span><span>Sun</span></div>
+            <div class="alarm-card">
+              <div>
+                <p class="mini-label">Morning Run</p>
+                <strong>09:50</strong>
+              </div>
+              <button class="round" aria-label="Play alarm">▶</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="variant" data-kind="object">
+          <div class="variant__head">
+            <div>
+              <h2>C. Swiss Vault</h2>
+              <p>Industrial object-first wallet with spec annotations.</p>
+            </div>
+            <span class="tag">Industrial Swiss</span>
+          </div>
+          <div class="phone c-swiss">
+            <div class="mini-top">
+              <p class="mini-label">Advanced custody</p>
+              <button class="round" aria-label="Open menu">+</button>
+            </div>
+            <div class="swiss-mark">VLT</div>
+            <div class="spec-row">
+              <span>Titanium<br>grade 5</span>
+              <span>Secure<br>element</span>
+            </div>
+            <div class="object-disc" aria-hidden="true"></div>
+            <button class="swiss-cta">See vault card</button>
+          </div>
+        </article>
+
+        <article class="variant" data-kind="paper">
+          <div class="variant__head">
+            <div>
+              <h2>D. Notebook Pay</h2>
+              <p>Academic paper grammar applied to intelligent spending.</p>
+            </div>
+            <span class="tag">Paper AI</span>
+          </div>
+          <div class="phone d-paper">
+            <div class="mini-top">
+              <p class="mini-label">Ledger note</p>
+              <button class="round" aria-label="Open menu">≡</button>
+            </div>
+            <div class="paper-hero">
+              <div class="doodle" aria-hidden="true"></div>
+              <h3>The wallet that thinks with you.</h3>
+            </div>
+            <div class="note-panel">
+              <div>Ask<br>Galileo</div>
+              <div></div>
+            </div>
+            <div class="bottom-action" style="background: rgba(255,255,255,.72); --active-ink:#fff;">
+              <button class="active"><span>Ask</span></button>
+              <button>Notes</button>
+              <button>Plan</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="variant" data-kind="trust">
+          <div class="variant__head">
+            <div>
+              <h2>E. Care Ledger</h2>
+              <p>Warm institutional tone for high-trust financial guidance.</p>
+            </div>
+            <span class="tag">Institutional</span>
+          </div>
+          <div class="phone e-care">
+            <div class="mini-top">
+              <p class="mini-label">Care account</p>
+              <button class="round" aria-label="Open menu">•</button>
+            </div>
+            <div class="care-head">
+              <h3>The trusted account for family care.</h3>
+            </div>
+            <div class="care-media" aria-hidden="true"></div>
+            <div class="stat-flood">
+              <p class="mini-label">Capacity reserved</p>
+              <strong>34x</strong>
+              <p>More room for planning, claims, and care expenses.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="variant" data-kind="ops">
+          <div class="variant__head">
+            <div>
+              <h2>F. Ops Console</h2>
+              <p>Dark technical dashboard for automations and task state.</p>
+            </div>
+            <span class="tag">Dark Ops</span>
+          </div>
+          <div class="phone f-ops">
+            <div class="mini-top">
+              <p class="mini-label">Visual automations</p>
+              <button class="round" aria-label="Open menu">=</button>
+            </div>
+            <div class="ops-title">Visual Automation for Modern Teams</div>
+            <div class="ops-chip">AI-powered automations</div>
+            <div class="ops-grid">
+              <div><strong>12.4k</strong><span>Runs</span></div>
+              <div><strong>98.9%</strong><span>Success</span></div>
+              <div><strong>1.5m</strong><span>Runtime</span></div>
+              <div><strong>28</strong><span>Tasks</span></div>
+            </div>
+            <div class="bars" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+          </div>
+        </article>
+      </section>
+
+      <section class="notes" aria-label="Selection notes">
+        <div class="note"><b>A</b>Most directly continues the first prototype. Strongest for wallet/finance product.</div>
+        <div class="note"><b>B</b>Best if the product has time, routine, scheduling, or kinetic picker behavior.</div>
+        <div class="note"><b>C</b>Best for premium object authority. More brand/industrial than app utility.</div>
+        <div class="note"><b>D</b>Useful for AI assistant, learning, planning, or knowledge-led finance.</div>
+        <div class="note"><b>E</b>Trust-heavy direction. Good for health, family, insurance, care, or institutional money.</div>
+        <div class="note"><b>F</b>Best for B2B ops, automation, devtools, monitoring, and AI workflow products.</div>
+      </section>
+    </main>
+
+    <script>
+      const filters = [...document.querySelectorAll(".filter")];
+      const variants = [...document.querySelectorAll(".variant")];
+
+      filters.forEach((filter) => {
+        filter.addEventListener("click", () => {
+          const kind = filter.dataset.filter;
+          filters.forEach((item) => item.classList.toggle("is-active", item === filter));
+          variants.forEach((variant) => {
+            const show = kind === "all" || variant.dataset.kind === kind;
+            variant.hidden = !show;
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

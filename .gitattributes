@@ -1,0 +1,4 @@
+# The examples are visual demos for the rulepack, not the repository's primary
+# implementation language. Keep GitHub Linguist from classifying the repo as an
+# HTML/CSS project because of demo boards.
+design-operating-stack/examples/** linguist-documentation

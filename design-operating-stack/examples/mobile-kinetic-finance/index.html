@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mobile Kinetic Finance Prototype</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="screen" aria-label="Sandbox finance account">
+      <section class="hero" aria-labelledby="balance-title">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Sandbox account</p>
+            <h1 id="balance-title">Northstar</h1>
+          </div>
+          <button class="icon-button" aria-label="Open account settings">
+            <span></span>
+            <span></span>
+          </button>
+        </header>
+
+        <div class="currency-strip" aria-label="Currency balances">
+          <button class="currency is-active">
+            <span class="flag">US</span>
+            <span>USD</span>
+            <strong>24,092.67</strong>
+          </button>
+          <button class="currency">
+            <span class="flag">EU</span>
+            <span>EUR</span>
+            <strong>7,805.91</strong>
+          </button>
+          <button class="currency">
+            <span class="flag">AU</span>
+            <span>AUD</span>
+            <strong>3,693.70</strong>
+          </button>
+        </div>
+
+        <p class="balance-label">Available balance</p>
+        <div class="balance" aria-label="Available balance 24092 dollars and 67 cents">
+          <span>$24,092</span><small>.67</small>
+        </div>
+
+        <div class="wallet-stack" aria-label="Selected debit card">
+          <article class="card card-back" aria-hidden="true"></article>
+          <article class="card card-main">
+            <div class="card-grid"></div>
+            <div class="brand-mark" aria-hidden="true">*</div>
+            <p>**** 8152</p>
+            <strong>Debit</strong>
+          </article>
+        </div>
+      </section>
+
+      <section class="quick-actions" aria-label="Quick actions">
+        <button>
+          <span>+</span>
+          Add
+        </button>
+        <button>
+          <span>-></span>
+          Send
+        </button>
+        <button>
+          <span>fx</span>
+          Convert
+        </button>
+        <button>
+          <span>...</span>
+          More
+        </button>
+      </section>
+
+      <section class="sheet" aria-labelledby="transactions-title">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <div class="sheet-header">
+          <div>
+            <p class="eyebrow">Today</p>
+            <h2 id="transactions-title">Transactions</h2>
+          </div>
+          <button class="text-button">View all</button>
+        </div>
+
+        <div class="transaction-list">
+          <article class="transaction">
+            <span class="tx-icon">fx</span>
+            <div>
+              <h3>Conversion USD to EUR</h3>
+              <p>Currency conversion</p>
+            </div>
+            <strong>-$2,000.00</strong>
+          </article>
+          <article class="transaction">
+            <span class="tx-icon">JW</span>
+            <div>
+              <h3>John Williams</h3>
+              <p>Transfer received</p>
+            </div>
+            <strong>+$75.00</strong>
+          </article>
+          <article class="transaction">
+            <span class="tx-icon">UB</span>
+            <div>
+              <h3>Uber</h3>
+              <p>Debit card</p>
+            </div>
+            <strong>-$34.24</strong>
+          </article>
+        </div>
+      </section>
+
+      <nav class="bottom-bar" aria-label="Primary">
+        <button class="is-active" aria-label="Home">
+          <span></span>
+          Home
+        </button>
+        <button aria-label="Cards">
+          <span></span>
+          Cards
+        </button>
+        <button aria-label="Activity">
+          <span></span>
+          Activity
+        </button>
+      </nav>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,21 @@
+# Existing upstream reference checkout; keep out of this repo.
+hallmark/
+
+# Private raw references stay local only.
+refs_image/
+private_refs/
+
+# Local/system noise
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Package manager / build output
+node_modules/
+dist/
+build/
+.vercel/
+.next/
+
+# Logs
+*.log
