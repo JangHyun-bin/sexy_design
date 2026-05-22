@@ -88,3 +88,7 @@ action system.
 The first multi-direction comparison board lives in
 `examples/mobile-shotgun-board/index.html`. It contains six mobile UI directions
 in one HTML file and can be served locally with Python's static server.
+
+The second-stage mutation board lives in
+`examples/mobile-shotgun-board-v2/index.html`. It keeps the strongest V1
+directions and deepens their state, touch, and operational logic.
