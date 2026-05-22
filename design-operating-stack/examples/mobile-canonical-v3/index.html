@@ -1,0 +1,1368 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Design Operating Stack - Canonical V3</title>
+    <style>
+      :root {
+        --paper: #ecebe6;
+        --paper-2: #f7f5ef;
+        --ink: #07080a;
+        --muted: #666b72;
+        --line: rgba(7, 8, 10, 0.16);
+        --line-strong: rgba(7, 8, 10, 0.28);
+        --night: #050607;
+        --night-2: #111317;
+        --chalk: #f5f2eb;
+        --acid: #ff5a0a;
+        --blue: #1d3cff;
+        --teal: #2bb9b0;
+        --steel: #aab5c2;
+        --shadow: 0 32px 90px rgba(7, 8, 10, 0.18);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        min-height: 100%;
+        scrollbar-width: none;
+      }
+
+      html::-webkit-scrollbar,
+      body::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+      }
+
+      body {
+        min-height: 100%;
+        margin: 0;
+        color: var(--ink);
+        background:
+          linear-gradient(90deg, rgba(7, 8, 10, 0.045) 1px, transparent 1px),
+          linear-gradient(rgba(7, 8, 10, 0.045) 1px, transparent 1px),
+          linear-gradient(118deg, rgba(43, 185, 176, 0.1), transparent 34%),
+          var(--paper);
+        background-size: 72px 72px, 72px 72px, auto, auto;
+        overflow-x: clip;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button {
+        border: 0;
+        cursor: pointer;
+      }
+
+      button:focus-visible,
+      input:focus-visible {
+        outline: 2px solid var(--acid);
+        outline-offset: 3px;
+      }
+
+      .wrap {
+        width: min(1480px, calc(100% - 40px));
+        max-width: calc(100vw - 40px);
+        margin: 0 auto;
+        padding: 30px 0 52px;
+        overflow-x: clip;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 440px;
+        gap: 44px;
+        align-items: start;
+        min-width: 0;
+        padding-bottom: 28px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .eyebrow {
+        margin: 0 0 14px;
+        color: #4f5661;
+        font-size: 12px;
+        line-height: 1;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        max-width: 12ch;
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 112px;
+        line-height: 0.84;
+        letter-spacing: 0;
+      }
+
+      .hero-copy {
+        margin: 10px 0 0;
+        max-width: 560px;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+      }
+
+      .hero-panel {
+        display: grid;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .signal-strip {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .signal {
+        min-height: 84px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.46);
+        padding: 13px;
+      }
+
+      .signal b {
+        display: block;
+        font-size: 30px;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .signal span {
+        display: block;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.25;
+      }
+
+      .hero-note {
+        min-height: 82px;
+        border: 1px solid var(--line);
+        background: rgba(247, 245, 239, 0.72);
+        padding: 14px;
+        color: #3f4650;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+      }
+
+      .canon {
+        display: grid;
+        grid-template-columns: 500px minmax(0, 1fr);
+        gap: 24px;
+        min-width: 0;
+        padding-top: 24px;
+        align-items: start;
+      }
+
+      .device-bay {
+        min-height: 920px;
+        min-width: 0;
+        border: 1px solid var(--line);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.34)),
+          rgba(255, 255, 255, 0.34);
+        box-shadow: var(--shadow);
+        padding: 24px 18px;
+      }
+
+      .phone {
+        position: sticky;
+        top: 18px;
+        width: min(100%, 394px);
+        max-width: 100%;
+        min-width: 0;
+        min-height: 826px;
+        margin: 0 auto;
+        overflow: hidden;
+        isolation: isolate;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 40px;
+        color: var(--chalk);
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          linear-gradient(130deg, rgba(255, 90, 10, 0.2), transparent 26%),
+          linear-gradient(310deg, rgba(29, 60, 255, 0.2), transparent 34%),
+          var(--night);
+        background-size: 18px 18px, 18px 18px, auto, auto, auto;
+        box-shadow: 0 34px 86px rgba(0, 0, 0, 0.38);
+      }
+
+      .phone::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.09), transparent 32%),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.04), transparent 24%, transparent 72%, rgba(255, 255, 255, 0.03));
+        mix-blend-mode: screen;
+      }
+
+      .phone > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .phone-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 22px 22px 0;
+      }
+
+      .stack-mark {
+        display: grid;
+        gap: 5px;
+      }
+
+      .stack-mark span:first-child {
+        color: rgba(245, 242, 235, 0.66);
+        font-size: 11px;
+        line-height: 1;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .stack-mark span:last-child {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 25px;
+        line-height: 1;
+      }
+
+      .icon-row {
+        display: flex;
+        gap: 8px;
+      }
+
+      .icon-btn {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        color: var(--ink);
+        background: rgba(245, 242, 235, 0.96);
+        font-weight: 800;
+      }
+
+      .phase-tabs {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        padding: 22px 18px 0;
+      }
+
+      .phase-tab {
+        min-height: 44px;
+        border: 1px solid rgba(245, 242, 235, 0.16);
+        border-radius: 0;
+        color: rgba(245, 242, 235, 0.62);
+        background: rgba(255, 255, 255, 0.04);
+        font-size: 11px;
+        line-height: 1;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .phase-tab.is-active {
+        color: var(--night);
+        background: var(--chalk);
+      }
+
+      .hero-screen {
+        padding: 28px 22px 0;
+      }
+
+      .screen-label {
+        margin: 0 0 16px;
+        color: rgba(245, 242, 235, 0.58);
+        font-size: 11px;
+        line-height: 1;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .screen-title {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 48px;
+        line-height: 0.9;
+        letter-spacing: 0;
+      }
+
+      .score-row {
+        display: grid;
+        grid-template-columns: 1fr 116px;
+        gap: 12px;
+        margin-top: 22px;
+      }
+
+      .score-block,
+      .run-token {
+        border: 1px solid rgba(245, 242, 235, 0.18);
+        background: rgba(255, 255, 255, 0.055);
+        min-height: 112px;
+        padding: 14px;
+      }
+
+      .score-block small,
+      .run-token small {
+        display: block;
+        color: rgba(245, 242, 235, 0.54);
+        font-size: 10px;
+        line-height: 1;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .score-block b {
+        display: block;
+        margin-top: 14px;
+        font-size: 54px;
+        line-height: 0.9;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .run-token {
+        display: grid;
+        align-content: space-between;
+      }
+
+      .run-token b {
+        display: block;
+        font-family: "Courier New", monospace;
+        font-size: 28px;
+        line-height: 1;
+      }
+
+      .object-stack {
+        position: relative;
+        min-height: 185px;
+        margin: 22px 0 0;
+      }
+
+      .spec-plate {
+        position: absolute;
+        right: 0;
+        top: 38px;
+        width: 188px;
+        min-height: 124px;
+        border: 1px solid rgba(245, 242, 235, 0.18);
+        background: rgba(170, 181, 194, 0.92);
+        color: var(--ink);
+        padding: 14px;
+      }
+
+      .spec-plate span {
+        display: block;
+        color: #2a3038;
+        font-family: "Courier New", monospace;
+        font-size: 10px;
+        line-height: 1.15;
+        text-transform: uppercase;
+      }
+
+      .spec-plate b {
+        display: block;
+        margin-top: 16px;
+        font-size: 36px;
+        line-height: 1;
+      }
+
+      .selected-card {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 252px;
+        min-height: 146px;
+        overflow: hidden;
+        border: 1px solid rgba(245, 242, 235, 0.22);
+        border-radius: 22px;
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+          linear-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+          linear-gradient(180deg, #47b7d9 0%, #2637d6 42%, #050607 84%);
+        background-size: 20px 20px, 20px 20px, auto;
+        box-shadow: 18px 24px 0 rgba(170, 181, 194, 0.6);
+        padding: 18px;
+      }
+
+      .selected-card .asterisk {
+        position: absolute;
+        left: 50%;
+        top: 49%;
+        color: #ffffff;
+        font-size: 54px;
+        line-height: 1;
+        transform: translate(-50%, -50%);
+      }
+
+      .selected-card small {
+        display: block;
+        color: rgba(255, 255, 255, 0.72);
+        font-family: "Courier New", monospace;
+        font-size: 10px;
+        line-height: 1;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .queue {
+        display: grid;
+        gap: 8px;
+        padding: 0 22px;
+      }
+
+      .queue-row {
+        display: grid;
+        grid-template-columns: 11px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        min-height: 50px;
+        border: 1px solid rgba(245, 242, 235, 0.14);
+        background: rgba(0, 0, 0, 0.18);
+        padding: 10px 12px;
+      }
+
+      .pin {
+        width: 11px;
+        height: 24px;
+        background: var(--acid);
+      }
+
+      .queue-row strong {
+        display: block;
+        color: var(--chalk);
+        font-size: 13px;
+        line-height: 1.15;
+      }
+
+      .queue-row span {
+        display: block;
+        margin-top: 4px;
+        color: rgba(245, 242, 235, 0.52);
+        font-size: 11px;
+        line-height: 1;
+      }
+
+      .state {
+        color: var(--chalk);
+        font-family: "Courier New", monospace;
+        font-size: 11px;
+        line-height: 1;
+        text-transform: uppercase;
+      }
+
+      .control-sheet {
+        margin-top: 20px;
+        min-height: 210px;
+        border-top: 1px solid rgba(245, 242, 235, 0.14);
+        border-radius: 28px 28px 0 0;
+        background: var(--paper-2);
+        color: var(--ink);
+        padding: 20px 22px 24px;
+      }
+
+      .sheet-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: start;
+      }
+
+      .sheet-top small {
+        display: block;
+        color: #69707b;
+        font-size: 11px;
+        line-height: 1;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .sheet-top b {
+        display: block;
+        margin-top: 10px;
+        font-size: 28px;
+        line-height: 1;
+      }
+
+      .dial {
+        display: grid;
+        place-items: center;
+        width: 62px;
+        height: 62px;
+        border: 1px solid rgba(7, 8, 10, 0.14);
+        border-radius: 50%;
+        background:
+          conic-gradient(from 30deg, #050607, #2f3030, #d7d4ca, #050607);
+      }
+
+      .dial::after {
+        content: "";
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--paper-2);
+      }
+
+      .action-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 20px;
+      }
+
+      .sheet-btn {
+        min-height: 52px;
+        border: 1px solid rgba(7, 8, 10, 0.16);
+        background: transparent;
+        color: var(--ink);
+        font-weight: 750;
+      }
+
+      .sheet-btn.primary {
+        border-color: var(--acid);
+        background: var(--acid);
+        color: #100703;
+      }
+
+      .operator {
+        display: grid;
+        grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
+        gap: 18px;
+        min-width: 0;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.5);
+        padding: 18px;
+        min-width: 0;
+      }
+
+      .panel.dark {
+        color: var(--chalk);
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          var(--night);
+        background-size: 18px 18px;
+      }
+
+      .panel.wide {
+        grid-column: 1 / -1;
+      }
+
+      .panel h2 {
+        margin: 0;
+        font-size: 19px;
+        line-height: 1.1;
+      }
+
+      .panel p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+      }
+
+      .panel.dark p {
+        color: rgba(245, 242, 235, 0.62);
+      }
+
+      .gate-list {
+        display: grid;
+        gap: 9px;
+        margin-top: 18px;
+      }
+
+      .gate {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 12px;
+        min-height: 58px;
+        border-top: 1px solid var(--line);
+        padding-top: 9px;
+      }
+
+      .panel.dark .gate {
+        border-color: rgba(245, 242, 235, 0.14);
+      }
+
+      .gate-num {
+        font-family: "Courier New", monospace;
+        font-size: 16px;
+        line-height: 1;
+      }
+
+      .gate strong {
+        display: block;
+        font-size: 13px;
+        line-height: 1.1;
+      }
+
+      .gate span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .panel.dark .gate span {
+        color: rgba(245, 242, 235, 0.5);
+      }
+
+      .ok {
+        min-width: 44px;
+        color: var(--acid);
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        text-align: right;
+      }
+
+      .matrix {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        border: 1px solid var(--line);
+        margin-top: 18px;
+      }
+
+      .matrix div {
+        min-height: 88px;
+        border-right: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        padding: 13px;
+      }
+
+      .matrix div:nth-child(3n) {
+        border-right: 0;
+      }
+
+      .matrix div:nth-last-child(-n + 3) {
+        border-bottom: 0;
+      }
+
+      .matrix small {
+        display: block;
+        color: var(--muted);
+        font-size: 10px;
+        line-height: 1;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .matrix b {
+        display: block;
+        margin-top: 14px;
+        font-size: 27px;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 18px;
+      }
+
+      .step {
+        min-height: 118px;
+        border: 1px solid rgba(245, 242, 235, 0.14);
+        padding: 12px;
+      }
+
+      .step small {
+        display: block;
+        color: rgba(245, 242, 235, 0.46);
+        font-family: "Courier New", monospace;
+        font-size: 11px;
+        line-height: 1;
+      }
+
+      .step strong {
+        display: block;
+        margin-top: 20px;
+        font-size: 13px;
+        line-height: 1.1;
+      }
+
+      .step.is-hot {
+        border-color: var(--acid);
+        background: rgba(255, 90, 10, 0.12);
+      }
+
+      .depth {
+        display: grid;
+        grid-template-columns: 1fr 74px;
+        gap: 16px;
+        align-items: center;
+        margin-top: 18px;
+      }
+
+      .depth input {
+        width: 100%;
+        accent-color: var(--acid);
+      }
+
+      .depth output {
+        font-family: "Courier New", monospace;
+        font-size: 18px;
+        text-align: right;
+      }
+
+      .spec-table {
+        border: 1px solid var(--line);
+        margin-top: 18px;
+      }
+
+      .spec-table div {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 74px;
+        gap: 12px;
+        min-height: 48px;
+        align-items: center;
+        border-bottom: 1px solid var(--line);
+        padding: 0 12px;
+      }
+
+      .spec-table div:last-child {
+        border-bottom: 0;
+      }
+
+      .spec-table span {
+        font-size: 13px;
+      }
+
+      .spec-table b {
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+        text-align: right;
+      }
+
+      .footer-note {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        padding-top: 18px;
+      }
+
+      .note-cell {
+        min-height: 92px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.44);
+        padding: 13px;
+      }
+
+      .note-cell b {
+        display: block;
+        font-size: 13px;
+      }
+
+      .note-cell span {
+        display: block;
+        margin-top: 7px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.3;
+      }
+
+      @media (max-width: 1180px) {
+        h1 {
+          font-size: 82px;
+        }
+
+        .hero,
+        .canon {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-panel {
+          max-width: 640px;
+        }
+
+        .device-bay {
+          min-height: auto;
+        }
+
+        .phone {
+          position: relative;
+          top: auto;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .wrap {
+          width: calc(100% - 24px);
+          padding-top: 28px;
+        }
+
+        .hero {
+          gap: 24px;
+          padding-bottom: 24px;
+        }
+
+        h1 {
+          max-width: 10ch;
+          font-size: 56px;
+          line-height: 0.88;
+        }
+
+        .hero-copy {
+          font-size: 15px;
+        }
+
+        .signal-strip,
+        .operator,
+        .footer-note {
+          grid-template-columns: 1fr;
+        }
+
+        .canon {
+          gap: 18px;
+          padding-top: 18px;
+        }
+
+        .device-bay,
+        .panel {
+          padding: 12px;
+        }
+
+        .phone {
+          width: 100%;
+          max-width: 100%;
+          min-height: 790px;
+          border-radius: 32px;
+        }
+
+        .phone-top,
+        .hero-screen,
+        .queue {
+          padding-left: 18px;
+          padding-right: 18px;
+        }
+
+        .phase-tabs {
+          padding-left: 14px;
+          padding-right: 14px;
+        }
+
+        .screen-title {
+          font-size: 40px;
+        }
+
+        .score-row {
+          grid-template-columns: 1fr;
+        }
+
+        .object-stack {
+          min-height: 178px;
+        }
+
+        .selected-card {
+          width: 232px;
+        }
+
+        .spec-plate {
+          width: 156px;
+        }
+
+        .action-bar,
+        .timeline,
+        .matrix {
+          grid-template-columns: 1fr;
+        }
+
+        .matrix div,
+        .matrix div:nth-child(3n),
+        .matrix div:nth-last-child(-n + 3) {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .matrix div:last-child {
+          border-bottom: 0;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .wrap {
+          width: calc(100% - 18px);
+          max-width: calc(100vw - 18px);
+        }
+
+        h1 {
+          font-size: 42px;
+          line-height: 0.92;
+        }
+
+        .device-bay {
+          width: 100%;
+          max-width: 100%;
+          overflow: hidden;
+          padding: 6px;
+        }
+
+        .phone {
+          width: 320px;
+          max-width: 100%;
+          min-height: 760px;
+          border-radius: 28px;
+        }
+
+        .icon-btn {
+          width: 36px;
+          height: 36px;
+        }
+
+        .phone-top,
+        .hero-screen,
+        .queue {
+          padding-left: 12px;
+          padding-right: 12px;
+        }
+
+        .phase-tabs {
+          gap: 6px;
+          padding-left: 12px;
+          padding-right: 12px;
+        }
+
+        .phase-tab {
+          min-height: 42px;
+          font-size: 10px;
+        }
+
+        .screen-title {
+          font-size: 34px;
+        }
+
+        .selected-card {
+          width: 176px;
+          min-height: 124px;
+          box-shadow: 14px 20px 0 rgba(170, 181, 194, 0.6);
+        }
+
+        .spec-plate {
+          width: 116px;
+          min-height: 106px;
+          padding: 12px;
+        }
+
+        .spec-plate b {
+          font-size: 28px;
+        }
+
+        .control-sheet {
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .selected-card,
+        .spec-plate,
+        .queue-row,
+        .step {
+          transition:
+            transform 180ms ease,
+            border-color 180ms ease,
+            background 180ms ease;
+        }
+
+        .phase-tab,
+        .sheet-btn {
+          transition:
+            background 180ms ease,
+            color 180ms ease,
+            border-color 180ms ease;
+        }
+
+        .phone[data-mode="generate"] .selected-card {
+          transform: translateY(-4px);
+        }
+
+        .phone[data-mode="audit"] .spec-plate {
+          transform: translateY(-6px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Design Operating Stack / Canonical V3</p>
+          <h1>Agent design control</h1>
+          <p class="hero-copy">
+            A single direction that merges V2's run console, tactile finance
+            state, and industrial spec language into one agent-facing mobile
+            operating screen.
+          </p>
+        </div>
+
+        <aside class="hero-panel" aria-label="V3 selection rationale">
+          <div class="signal-strip">
+            <div class="signal">
+              <b>F1</b>
+              <span>Primary run-console structure</span>
+            </div>
+            <div class="signal">
+              <b>A1</b>
+              <span>Mobile object and touch state</span>
+            </div>
+            <div class="signal">
+              <b>C2</b>
+              <span>Spec-driven visual language</span>
+            </div>
+          </div>
+          <div class="hero-note">
+            The screen should feel like a working control surface: score,
+            mutate, audit, and promote a rulepack without becoming a generic
+            dashboard.
+          </div>
+        </aside>
+      </header>
+
+      <main class="canon">
+        <section class="device-bay" aria-label="Canonical mobile screen">
+          <div class="phone" data-mode="study" id="phone">
+            <div class="phone-top">
+              <div class="stack-mark">
+                <span>Design OS</span>
+                <span>Run 03</span>
+              </div>
+              <div class="icon-row">
+                <button class="icon-btn" type="button" title="Open command tray">=</button>
+                <button class="icon-btn" type="button" title="Add rule">+</button>
+              </div>
+            </div>
+
+            <div class="phase-tabs" role="tablist" aria-label="Design run mode">
+              <button class="phase-tab is-active" type="button" data-mode="study">Study</button>
+              <button class="phase-tab" type="button" data-mode="generate">Generate</button>
+              <button class="phase-tab" type="button" data-mode="audit">Audit</button>
+            </div>
+
+            <section class="hero-screen" aria-label="Current run status">
+              <p class="screen-label" id="mode-label">Reference DNA locked</p>
+              <h2 class="screen-title" id="mode-title">Score the living system</h2>
+              <div class="score-row">
+                <div class="score-block">
+                  <small>Weighted taste score</small>
+                  <b id="mode-score">8.4</b>
+                </div>
+                <div class="run-token">
+                  <small>Spec asset</small>
+                  <b id="mode-token">VLT</b>
+                </div>
+              </div>
+
+              <div class="object-stack" aria-label="Selected mobile object state">
+                <div class="selected-card">
+                  <small>Selected card / mobile state</small>
+                  <span class="asterisk">*</span>
+                </div>
+                <div class="spec-plate">
+                  <span>Cold route<br>policy 2 of 3</span>
+                  <b>V3-09</b>
+                </div>
+              </div>
+            </section>
+
+            <section class="queue" aria-label="Operating queue">
+              <div class="queue-row">
+                <span class="pin"></span>
+                <div>
+                  <strong id="queue-one">Extract transferable DNA</strong>
+                  <span>No source names, only reusable rules</span>
+                </div>
+                <span class="state">armed</span>
+              </div>
+              <div class="queue-row">
+                <span class="pin"></span>
+                <div>
+                  <strong id="queue-two">Mutate dominant gestures</strong>
+                  <span>Keep object authority, change the use case</span>
+                </div>
+                <span class="state">hot</span>
+              </div>
+              <div class="queue-row">
+                <span class="pin"></span>
+                <div>
+                  <strong id="queue-three">Audit mobile touch state</strong>
+                  <span>Thumb reach, state depth, text fit</span>
+                </div>
+                <span class="state">next</span>
+              </div>
+            </section>
+
+            <section class="control-sheet" aria-label="Promotion controls">
+              <div class="sheet-top">
+                <div>
+                  <small>Promote candidate</small>
+                  <b id="promotion-title">V3 rulepack core</b>
+                </div>
+                <div class="dial" aria-hidden="true"></div>
+              </div>
+              <div class="action-bar">
+                <button class="sheet-btn" type="button">Hold</button>
+                <button class="sheet-btn primary" type="button">Promote</button>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="operator" aria-label="Canonical system controls">
+          <article class="panel dark">
+            <h2>Rule gates</h2>
+            <p>
+              The visual system only survives if each screen proves state,
+              object authority, and mobile behavior.
+            </p>
+            <div class="gate-list">
+              <div class="gate">
+                <span class="gate-num">01</span>
+                <div>
+                  <strong>Object owns the screen</strong>
+                  <span>Balance, run token, spec asset, or control surface</span>
+                </div>
+                <span class="ok">OK</span>
+              </div>
+              <div class="gate">
+                <span class="gate-num">02</span>
+                <div>
+                  <strong>Accent has one job</strong>
+                  <span>Orange marks live action and selected queue heat</span>
+                </div>
+                <span class="ok">OK</span>
+              </div>
+              <div class="gate">
+                <span class="gate-num">03</span>
+                <div>
+                  <strong>Mobile is not a crop</strong>
+                  <span>Tabs, sheet, queue, and controls are thumb-native</span>
+                </div>
+                <span class="ok">OK</span>
+              </div>
+              <div class="gate">
+                <span class="gate-num">04</span>
+                <div>
+                  <strong>Reference stays anonymous</strong>
+                  <span>Only abstract DNA reaches public examples</span>
+                </div>
+                <span class="ok">OK</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <h2>Scoring matrix</h2>
+            <p>
+              V3 should score higher by becoming a working product surface,
+              not only a better-looking board.
+            </p>
+            <div class="matrix" aria-label="Taste score forecast">
+              <div>
+                <small>Object</small>
+                <b>4.7</b>
+              </div>
+              <div>
+                <small>Mobile</small>
+                <b>4.5</b>
+              </div>
+              <div>
+                <small>Surface</small>
+                <b>4.4</b>
+              </div>
+              <div>
+                <small>Evidence</small>
+                <b>4.6</b>
+              </div>
+              <div>
+                <small>Desire</small>
+                <b>4.3</b>
+              </div>
+              <div>
+                <small>Anti-slop</small>
+                <b>4.8</b>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel wide dark">
+            <h2>Run sequence</h2>
+            <p>
+              This is the operating story the stack should eventually automate:
+              study, score, mutate, audit, then promote.
+            </p>
+            <div class="timeline" aria-label="Design operating sequence">
+              <div class="step">
+                <small>01</small>
+                <strong>Study private references</strong>
+              </div>
+              <div class="step">
+                <small>02</small>
+                <strong>Extract reusable DNA</strong>
+              </div>
+              <div class="step is-hot">
+                <small>03</small>
+                <strong>Generate sharp mutations</strong>
+              </div>
+              <div class="step">
+                <small>04</small>
+                <strong>Audit mobile and UI slop</strong>
+              </div>
+              <div class="step">
+                <small>05</small>
+                <strong>Promote into rulepack</strong>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <h2>Mutation depth</h2>
+            <p>
+              The slider models how hard the system pushes away from the first
+              reference while keeping useful DNA.
+            </p>
+            <label class="depth">
+              <input id="depth" type="range" min="40" max="95" value="76" aria-label="Mutation depth">
+              <output id="depth-output">76%</output>
+            </label>
+          </article>
+
+          <article class="panel">
+            <h2>Spec controls</h2>
+            <p>
+              The industrial layer becomes usable only when it maps to controls,
+              assets, and policy states.
+            </p>
+            <div class="spec-table">
+              <div>
+                <span>Private source labels</span>
+                <b>0</b>
+              </div>
+              <div>
+                <span>Touch states</span>
+                <b>6</b>
+              </div>
+              <div>
+                <span>Audit gates</span>
+                <b>9</b>
+              </div>
+              <div>
+                <span>Promotion policy</span>
+                <b>2/3</b>
+              </div>
+            </div>
+          </article>
+        </section>
+      </main>
+
+      <footer class="footer-note" aria-label="V3 design decisions">
+        <div class="note-cell">
+          <b>Use F as spine</b>
+          <span>Operational queue, active run, and task heat define the product.</span>
+        </div>
+        <div class="note-cell">
+          <b>Use A as hand feel</b>
+          <span>Large number, selected card, and bottom sheet make it mobile-native.</span>
+        </div>
+        <div class="note-cell">
+          <b>Use C as material</b>
+          <span>Spec marks and industrial restraint prevent generic SaaS drift.</span>
+        </div>
+        <div class="note-cell">
+          <b>Ship as system</b>
+          <span>The final stack should score, mutate, audit, and promote designs.</span>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      const modes = {
+        study: {
+          label: "Reference DNA locked",
+          title: "Score the living system",
+          score: "8.4",
+          token: "VLT",
+          promote: "V3 rulepack core",
+          queueOne: "Extract transferable DNA",
+          queueTwo: "Mutate dominant gestures",
+          queueThree: "Audit mobile touch state"
+        },
+        generate: {
+          label: "Mutation run active",
+          title: "Build six sharper moves",
+          score: "8.7",
+          token: "RUN",
+          promote: "Mutation candidate",
+          queueOne: "Preserve object authority",
+          queueTwo: "Change surface and task",
+          queueThree: "Reject palette-only edits"
+        },
+        audit: {
+          label: "Taste gates armed",
+          title: "Reject the weak defaults",
+          score: "9.1",
+          token: "AUD",
+          promote: "Audited rulepack",
+          queueOne: "Check mobile fit",
+          queueTwo: "Check source anonymity",
+          queueThree: "Check operational evidence"
+        }
+      };
+
+      const phone = document.getElementById("phone");
+      const depth = document.getElementById("depth");
+      const depthOutput = document.getElementById("depth-output");
+      const tabs = document.querySelectorAll(".phase-tab");
+
+      function setMode(mode) {
+        const data = modes[mode];
+        phone.dataset.mode = mode;
+        document.getElementById("mode-label").textContent = data.label;
+        document.getElementById("mode-title").textContent = data.title;
+        document.getElementById("mode-score").textContent = data.score;
+        document.getElementById("mode-token").textContent = data.token;
+        document.getElementById("promotion-title").textContent = data.promote;
+        document.getElementById("queue-one").textContent = data.queueOne;
+        document.getElementById("queue-two").textContent = data.queueTwo;
+        document.getElementById("queue-three").textContent = data.queueThree;
+
+        for (const tab of tabs) {
+          tab.classList.toggle("is-active", tab.dataset.mode === mode);
+        }
+      }
+
+      for (const tab of tabs) {
+        tab.addEventListener("click", () => setMode(tab.dataset.mode));
+      }
+
+      depth.addEventListener("input", () => {
+        depthOutput.textContent = `${depth.value}%`;
+        phone.style.setProperty("--mutation-depth", `${depth.value}%`);
+      });
+    </script>
+  </body>
+</html>

@@ -92,3 +92,7 @@ in one HTML file and can be served locally with Python's static server.
 The second-stage mutation board lives in
 `examples/mobile-shotgun-board-v2/index.html`. It keeps the strongest V1
 directions and deepens their state, touch, and operational logic.
+
+The canonical V3 direction lives in
+`examples/mobile-canonical-v3/index.html`. It merges the strongest V2 ingredients
+into one agent-facing mobile operating screen.
